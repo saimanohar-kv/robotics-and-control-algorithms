@@ -102,4 +102,46 @@ def rodrigues_rotation(axis: np.ndarray, theta: float) -> np.ndarray:
 
 
 def quaternion_normalize(q: np.ndarray) -> np.ndarray:
-    """Normalizes quaternion [qx, qy, qz, qw] to 
+    """Normalizes quaternion [qx, qy, qz, qw] to unit length."""
+    q = np.asarray(q, dtype=np.float64).flatten()
+    norm = np.linalg.norm(q)
+    if norm < 1e-12:
+        return np.array([0.0, 0.0, 0.0, 1.0], dtype=np.float64)
+    return q / norm
+
+
+def quaternion_to_rot(q: np.ndarray) -> np.ndarray:
+    """Converts unit quaternion [qx, qy, qz, qw] to 3x3 rotation matrix in SO(3)."""
+    qx, qy, qz, qw = quaternion_normalize(q)
+    return np.array([
+        [1.0 - 2.0*(qy**2 + qz**2), 2.0*(qx*qy - qz*qw),       2.0*(qx*qz + qy*qw)],
+        [2.0*(qx*qy + qz*qw),       1.0 - 2.0*(qx**2 + qz**2), 2.0*(qy*qz - qx*qw)],
+        [2.0*(qx*qz - qy*qw),       2.0*(qy*qz + qx*qw),       1.0 - 2.0*(qx**2 + qy**2)]
+    ], dtype=np.float64)
+
+
+def rot_to_quaternion(R: np.ndarray) -> np.ndarray:
+    """
+    Converts 3x3 rotation matrix to unit quaternion [qx, qy, qz, qw]
+    using Shepperd's robust diagonal branch algorithm.
+    """
+    R = np.asarray(R, dtype=np.float64)
+    tr = np.trace(R)
+    if tr > 0.0:
+        s = np.sqrt(tr + 1.0) * 2.0
+        qw = 0.25 * s
+        qx = (R[2, 1] - R[1, 2]) / s
+        qy = (R[0, 2] - R[2, 0]) / s
+        qz = (R[1, 0] - R[0, 1]) / s
+    elif (R[0, 0] > R[1, 1]) and (R[0, 0] > R[2, 2]):
+        s = np.sqrt(1.0 + R[0, 0] - R[1, 1] - R[2, 2]) * 2.0
+        qw = (R[2, 1] - R[1, 2]) / s
+        qx = 0.25 * s
+        qy = (R[0, 1] + R[1, 0]) / s
+        qz = (R[0, 2] + R[2, 0]) / s
+    elif R[1, 1] > R[2, 2]:
+        s = np.sqrt(1.0 + R[1, 1] - R[0, 0] - R[2, 2]) * 2.0
+        qw = (R[0, 2] - R[2, 0]) / s
+        qx = (R[0, 1] + R[1, 0]) / s
+        qy = 0.25 * s
+        qz = (R[1, 2] + R[2, 1]) / 
