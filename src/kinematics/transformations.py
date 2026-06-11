@@ -144,4 +144,43 @@ def rot_to_quaternion(R: np.ndarray) -> np.ndarray:
         qw = (R[0, 2] - R[2, 0]) / s
         qx = (R[0, 1] + R[1, 0]) / s
         qy = 0.25 * s
-        qz = (R[1, 2] + R[2, 1]) / 
+        qz = (R[1, 2] + R[2, 1]) / s
+    else:
+        s = np.sqrt(1.0 + R[2, 2] - R[0, 0] - R[1, 1]) * 2.0
+        qw = (R[1, 0] - R[0, 1]) / s
+        qx = (R[0, 2] + R[2, 0]) / s
+        qy = (R[1, 2] + R[2, 1]) / s
+        qz = 0.25 * s
+
+    return quaternion_normalize(np.array([qx, qy, qz, qw], dtype=np.float64))
+
+
+def quaternion_multiply(q1: np.ndarray, q2: np.ndarray) -> np.ndarray:
+    """Hamilton quaternion product q = q1 * q2."""
+    x1, y1, z1, w1 = q1
+    x2, y2, z2, w2 = q2
+    return np.array([
+        w1*x2 + x1*w2 + y1*z2 - z1*y2,
+        w1*y2 - x1*z2 + y1*w2 + z1*x2,
+        w1*z2 + x1*y2 - y1*x2 + z1*w2,
+        w1*w2 - x1*x2 - y1*y2 - z1*z2
+    ], dtype=np.float64)
+
+
+def homogeneous_transform(R: np.ndarray, p: np.ndarray) -> np.ndarray:
+    """Constructs 4x4 homogeneous transformation matrix in SE(3)."""
+    T = np.eye(4, dtype=np.float64)
+    T[:3, :3] = R
+    T[:3, 3] = np.asarray(p, dtype=np.float64).flatten()
+    return T
+
+
+def invert_transform(T: np.ndarray) -> np.ndarray:
+    """Inverts 4x4 homogeneous transform T = [R p; 0 1] -> [R^T -R^T*p; 0 1]."""
+    T = np.asarray(T, dtype=np.float64)
+    R = T[:3, :3]
+    p = T[:3, 3]
+    T_inv = np.eye(4, dtype=np.float64)
+    T_inv[:3, :3] = R.T
+    T_inv[:3, 3] = -np.dot(R.T, p)
+    return T_inv
