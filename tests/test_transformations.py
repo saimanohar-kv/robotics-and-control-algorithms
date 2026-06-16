@@ -41,4 +41,36 @@ def test_rodrigues_and_quaternion_equivalence():
     q_recovered = rot_to_quaternion(R_rodrigues)
 
     assert np.allclose(R_rodrigues, R_quat, atol=1e-6)
-    assert np.allclose(quaternion_to_rot(q_recovered
+    assert np.allclose(quaternion_to_rot(q_recovered), R_rodrigues, atol=1e-6)
+
+
+def test_homogeneous_inverse():
+    R = rot_z(0.5)
+    p = np.array([1.2, -0.4, 2.1])
+    T = homogeneous_transform(R, p)
+    T_inv = invert_transform(T)
+
+    assert np.allclose(T @ T_inv, np.eye(4), atol=1e-7)
+
+
+def test_planar_2r_kinematics_roundtrip():
+    arm = Planar2RArm(l1=1.2, l2=0.8)
+    th1_orig, th2_orig = 0.45, -0.65
+    x, y = arm.forward_kinematics(th1_orig, th2_orig)
+
+    solutions = arm.inverse_kinematics(x, y)
+    assert len(solutions) == 2
+
+    # At least one solution must match original configuration
+    matched = any(np.isclose(th1, th1_orig, atol=1e-5) and np.isclose(th2, th2_orig, atol=1e-5) for th1, th2 in solutions)
+    assert matched
+
+    # Verify both solutions achieve target coordinates
+    for th1, th2 in solutions:
+        x_calc, y_calc = arm.forward_kinematics(th1, th2)
+        assert np.isclose(x, x_calc, atol=1e-5)
+        assert np.isclose(y, y_calc, atol=1e-5)
+
+
+def test_planar_3r_kinematics_roundtrip():
+    arm3 = Planar3
