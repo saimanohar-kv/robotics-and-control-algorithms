@@ -73,4 +73,26 @@ def test_planar_2r_kinematics_roundtrip():
 
 
 def test_planar_3r_kinematics_roundtrip():
-    arm3 = Planar3
+    arm3 = Planar3RArm(l1=1.0, l2=0.8, l3=0.4)
+    th1, th2, th3 = 0.3, 0.4, -0.2
+    x, y, phi = arm3.forward_kinematics(th1, th2, th3)
+
+    sols = arm3.inverse_kinematics(x, y, phi)
+    assert len(sols) >= 1
+
+    for s1, s2, s3 in sols:
+        x_c, y_c, phi_c = arm3.forward_kinematics(s1, s2, s3)
+        assert np.isclose(x, x_c, atol=1e-5)
+        assert np.isclose(y, y_c, atol=1e-5)
+        assert np.isclose(phi, phi_c, atol=1e-5)
+
+
+def test_dh_transformation_chain():
+    dh_table = [
+        [0.3, 0.0, np.pi/2, 0.0],
+        [0.0, 0.5, 0.0, 0.0]
+    ]
+    joints = [0.2, 0.4]
+    transforms = dh_chain(dh_table, joints)
+    assert len(transforms) == 3
+    assert np.allclose(transforms[0], np.eye(4))
