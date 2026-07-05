@@ -70,4 +70,24 @@ class Planar3RArm:
         """Calculates (x, y, phi) where phi = theta1 + theta2 + theta3 is tool orientation."""
         x = self.l1 * np.cos(theta1) + self.l2 * np.cos(theta1 + theta2) + self.l3 * np.cos(theta1 + theta2 + theta3)
         y = self.l1 * np.sin(theta1) + self.l2 * np.sin(theta1 + theta2) + self.l3 * np.sin(theta1 + theta2 + theta3)
-        phi = (theta1 + theta2 + theta3 + np.pi) % (2.0 * np.
+        phi = (theta1 + theta2 + theta3 + np.pi) % (2.0 * np.pi) - np.pi
+        return float(x), float(y), float(phi)
+
+    def inverse_kinematics(self, x: float, y: float, phi: float) -> List[Tuple[float, float, float]]:
+        """
+        Solves 3R IK by decoupling wrist position (xw, yw):
+            xw = x - l3 * cos(phi), yw = y - l3 * sin(phi)
+        Then solves 2R arm for (theta1, theta2) and computes theta3 = phi - theta1 - theta2.
+        """
+        xw = x - self.l3 * np.cos(phi)
+        yw = y - self.l3 * np.sin(phi)
+
+        sols_2r = self.arm_2r.inverse_kinematics(xw, yw)
+        results = []
+
+        for th1, th2 in sols_2r:
+            th3 = phi - th1 - th2
+            th3 = (th3 + np.pi) % (2.0 * np.pi) - np.pi
+            results.append((float(th1), float(th2), float(th3)))
+
+        return results
