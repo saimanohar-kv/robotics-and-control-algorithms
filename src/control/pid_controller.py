@@ -70,4 +70,14 @@ class DiscretePIDController:
         elif u_raw > self.output_max and error < 0.0:
             self.integral = int_candidate
         elif u_raw < self.output_min and error > 0.0:
-            self.integral 
+            self.integral = int_candidate
+
+        # Saturated final output
+        u = np.clip(p_term + self.integral + d_term, self.output_min, self.output_max)
+
+        # State updates
+        self.prev_error = error
+        self.prev_derivative = d_term
+        self.prev_measurement = measurement
+
+        return float(u)
