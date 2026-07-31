@@ -1,3 +1,3 @@
 # Robotics & Control Algorithms Library
 
-Phase 1: SE(3) kinematics and transformations complete.
+Phases 1-2 complete: Kinematics and PID control verified.
