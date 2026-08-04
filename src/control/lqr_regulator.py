@@ -40,4 +40,20 @@ class DiscreteLQRRegulator:
                          linalg.inv(self.R + self.B.T @ P @ self.B) @ (self.B.T @ P @ self.A) + self.Q
                 if np.allclose(P, P_next, atol=1e-8):
                     P = P_next
-              
+                    break
+                P = P_next
+
+        # Optimal gain K = (R + B^T P B)^(-1) (B^T P A)
+        K = linalg.inv(self.R + self.B.T @ P @ self.B) @ (self.B.T @ P @ self.A)
+        return P, K
+
+    def compute_control(self, x: np.ndarray) -> np.ndarray:
+        """Computes optimal control input u = -K * x."""
+        x = np.asarray(x, dtype=np.float64)
+        return -np.dot(self.K, x)
+
+    def is_closed_loop_stable(self) -> bool:
+        """Checks if all closed-loop eigenvalues of (A - B*K) lie inside unit circle."""
+        A_cl = self.A - self.B @ self.K
+        eigenvalues = linalg.eigvals(A_cl)
+        return bool(np.all(np.abs(eigenvalues) < 1.0))
