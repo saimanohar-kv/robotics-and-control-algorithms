@@ -52,4 +52,23 @@ class LinearKalmanFilter:
         """
         Measurement update (correction step) using numerically stable Joseph form:
             y = z - H * x
-            S = H
+            S = H * P * H^T + R
+            K = P * H^T * S^(-1)
+            x = x + K * y
+            P = (I - K * H) * P * (I - K * H)^T + K * R * K^T
+        """
+        z = np.asarray(z, dtype=np.float64).flatten()
+        y = z - np.dot(self.H, self.x)
+        S = np.dot(self.H, np.dot(self.P, self.H.T)) + self.R
+
+        # Kalman gain
+        K = np.dot(self.P, np.dot(self.H.T, np.linalg.inv(S)))
+
+        # Update state
+        self.x = self.x + np.dot(K, y)
+
+        # Joseph form covariance update
+        I_KH = np.eye(self.dim_x) - np.dot(K, self.H)
+        self.P = np.dot(I_KH, np.dot(self.P, I_KH.T)) + np.dot(K, np.dot(self.R, K.T))
+
+        return self.x.copy(), self.P.copy()
