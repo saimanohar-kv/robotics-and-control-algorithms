@@ -1,3 +1,3 @@
 # Robotics & Control Algorithms Library
 
-Phases 1-2 complete: Kinematics and PID control verified.
+Phases 1-3 complete: Kinematics, Control, and Kalman estimation verified.
