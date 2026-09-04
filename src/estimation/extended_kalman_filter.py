@@ -48,4 +48,32 @@ class RobotPoseEKF:
 
         # Motion model Jacobian F_x = df / dx
         F_x = np.eye(3, dtype=np.float64)
-        F_x[0, 2] =
+        F_x[0, 2] = -v * self.dt * np.sin(th_mid)
+        F_x[1, 2] =  v * self.dt * np.cos(th_mid)
+
+        # Propagate covariance
+        self.P = F_x @ self.P @ F_x.T + self.Q
+        return self.state.copy()
+
+    def update(self, z: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Linear measurement update:
+            z = H * x + v
+        """
+        z = np.asarray(z, dtype=np.float64).flatten()
+        H = np.eye(3, dtype=np.float64)
+
+        # Innovation (residual) with angular wrapping
+        y = z - self.state
+        y[2] = (y[2] + np.pi) % (2.0 * np.pi) - np.pi
+
+        S = H @ self.P @ H.T + self.R
+        K = self.P @ H.T @ np.linalg.inv(S)
+
+        self.state += K @ y
+        self.state[2] = (self.state[2] + np.pi) % (2.0 * np.pi) - np.pi
+
+        I_KH = np.eye(3) - K @ H
+        self.P = I_KH @ self.P @ I_KH.T + K @ self.R @ K.T
+
+        return self.state.copy(), self.P.copy()
