@@ -59,4 +59,29 @@ def test_natural_cubic_spline_interpolation():
         pos, _, _ = spline.evaluate(t_i)
         assert np.isclose(pos, y_i, atol=1e-6)
 
-    # Contin
+    # Continuity test across knot 2.5
+    eps = 1e-5
+    _, v_left, a_left = spline.evaluate(2.5 - eps)
+    _, v_right, a_right = spline.evaluate(2.5 + eps)
+    assert np.isclose(v_left, v_right, atol=1e-3)
+    assert np.isclose(a_left, a_right, atol=1e-3)
+
+
+def test_minimum_jerk_boundary_conditions():
+    traj = MinimumJerkTrajectory(start_pos=1.0, end_pos=4.0, duration=2.5)
+
+    # t = 0
+    s0, v0, a0 = traj.evaluate(0.0)
+    assert np.isclose(s0, 1.0)
+    assert np.isclose(v0, 0.0)
+    assert np.isclose(a0, 0.0)
+
+    # t = T
+    sT, vT, aT = traj.evaluate(2.5)
+    assert np.isclose(sT, 4.0)
+    assert np.isclose(vT, 0.0)
+    assert np.isclose(aT, 0.0)
+
+    # Peak velocity occurs around t = T / 2
+    _, v_mid, _ = traj.evaluate(1.25)
+    assert v_mid > 0.0
