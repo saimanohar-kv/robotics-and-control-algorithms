@@ -1,3 +1,3 @@
 # Robotics & Control Algorithms Library
 
-Phases 1-3 complete: Kinematics, Control, and Kalman estimation verified.
+Phases 1-4 complete: Kinematics, Control, Estimation, and Trajectory Planning.
