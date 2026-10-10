@@ -95,3 +95,18 @@ def synthesize_three_precision_points(theta2_pts: List[float],
 
     for i in range(3):
         th2, th4 = theta2_pts[i], theta4_pts[i]
+        A[i] = [np.cos(th4), -np.cos(th2), 1.0]
+        b[i] = np.cos(th2 - th4)
+
+    K = np.linalg.solve(A, b)
+    K1, K2, K3 = K[0], K[1], K[2]
+
+    r1 = float(ground_length_r1)
+    r2 = r1 / K1
+    r4 = r1 / K2
+    r3_sq = r1**2 + r2**2 + r4**2 - 2.0 * r2 * r4 * K3
+    if r3_sq <= 0:
+        raise ValueError("Synthesis yielded invalid non-real coupler length.")
+    r3 = np.sqrt(r3_sq)
+
+    return float(r1), float(r2), float(r3), float(r4)
