@@ -59,4 +59,14 @@ def test_freudenstein_three_point_synthesis():
     assert np.isclose(r1, r1_true, atol=1e-4)
     assert np.isclose(r2, r2_true, atol=1e-4)
     assert np.isclose(r3, r3_true, atol=1e-4)
-    assert np.isclose(r4, r4_true
+    assert np.isclose(r4, r4_true, atol=1e-4)
+
+
+def test_transmission_angle_bounds():
+    # Test well-proportioned 4-bar linkage
+    r1, r2, r3, r4 = 1.0, 0.3, 0.9, 0.7
+    eval_res = evaluate_transmission_angle_range(r1, r2, r3, r4)
+
+    assert eval_res["is_permissible"] is True
+    assert eval_res["min_mu_deg"] >= 45.0
+    assert eval_res["max_mu_deg"] <= 135.0
